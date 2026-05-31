@@ -149,12 +149,12 @@ not a distributed one.
 
 ## Status
 
-v0.2 implements the full v1 scope (see `docs/PLAN.md`): Merkle core, append-only log with
-signed checkpoints, verifiable map, CLI, RFC known-answer + 500-trial property tests, CI.
+v0.2 covers the full v1 scope: Merkle core, append-only log with signed checkpoints,
+verifiable map, CLI, RFC 6962 cross-implementation vectors + 500-trial property tests, CI.
 Proof verifiers are total (never throw on untrusted input) and support tree sizes up to
-`Number.MAX_SAFE_INTEGER`; the file store writes atomically and durably. Decisions are
-recorded in `docs/adr/`. Roadmap: networked witness/gossip, tiled logs, inclusion-proof
-batching.
+`Number.MAX_SAFE_INTEGER`; the file store writes atomically and durably. Key design
+decisions are recorded in `docs/adr/`. Roadmap: networked witness/gossip, tiled logs,
+inclusion-proof batching.
 
 ## License
 
