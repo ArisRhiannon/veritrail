@@ -101,12 +101,14 @@ export class SparseMerkleTree {
 
 /** Verify that `key` maps to `value` under `root`. */
 export function verifyMapInclusion(key: Uint8Array, value: Uint8Array, proof: Uint8Array[], root: Uint8Array): boolean {
+  if (key.length !== KEY_BYTES) return false;
   const r = reconstruct(key, leafHash(value), proof);
   return r !== null && equal(r, root);
 }
 
 /** Verify that `key` is absent under `root` (its leaf is the empty default). */
 export function verifyMapNonInclusion(key: Uint8Array, proof: Uint8Array[], root: Uint8Array): boolean {
+  if (key.length !== KEY_BYTES) return false;
   const r = reconstruct(key, ZERO, proof);
   return r !== null && equal(r, root);
 }

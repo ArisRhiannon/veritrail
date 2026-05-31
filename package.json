@@ -1,9 +1,9 @@
 {
   "name": "veritrail",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Tamper-evident, verifiable append-only logs and maps for TypeScript. RFC 6962 Merkle trees with inclusion & consistency proofs, Ed25519-signed checkpoints, and a sparse Merkle verifiable map. Zero dependencies.",
   "type": "module",
-  "license": "SEE LICENSE IN LICENSE",
+  "license": "MIT",
   "author": "Aris Rhiannon",
   "homepage": "https://github.com/ArisRhiannon/veritrail#readme",
   "repository": { "type": "git", "url": "git+https://github.com/ArisRhiannon/veritrail.git" },

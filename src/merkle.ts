@@ -1,9 +1,10 @@
 import { emptyRoot, leafHash, nodeHash, equal } from "./hash";
 
-/** Largest power of two strictly less than n (n >= 2). */
+/** Largest power of two strictly less than n (n >= 2). Uses multiplication to
+ *  stay correct beyond 2^31 (a signed `<<` would overflow). */
 function splitPoint(n: number): number {
   let k = 1;
-  while (k << 1 < n) k <<= 1;
+  while (k * 2 < n) k *= 2;
   return k;
 }
 
@@ -33,7 +34,7 @@ export function inclusionPath(m: number, entries: Uint8Array[]): Uint8Array[] {
 /**
  * Verify an inclusion proof (RFC 9162 §2.1.3.2). `leaf` is the leaf hash.
  * Reconstructs the root from `leaf` + `path` and compares to `root`.
- * Note: sizes are bounded to < 2^32 (uses 32-bit unsigned index arithmetic).
+ * Tree sizes up to Number.MAX_SAFE_INTEGER (2^53 − 1) are supported.
  */
 export function verifyInclusion(
   path: Uint8Array[],
@@ -42,31 +43,33 @@ export function verifyInclusion(
   leaf: Uint8Array,
   root: Uint8Array,
 ): boolean {
-  if (!Number.isInteger(index) || !Number.isInteger(treeSize) || index < 0 || treeSize < 0 || index >= treeSize) return false;
+  if (!Number.isSafeInteger(index) || !Number.isSafeInteger(treeSize) || index < 0 || index >= treeSize) return false;
   let fn = index;
   let sn = treeSize - 1;
   let r = leaf;
   for (const p of path) {
     if (sn === 0) return false;
-    if ((fn & 1) === 1 || fn === sn) {
+    if (fn % 2 === 1 || fn === sn) {
       r = nodeHash(p, r);
-      if ((fn & 1) === 0) {
+      if (fn % 2 === 0) {
         do {
-          fn >>>= 1;
-          sn >>>= 1;
-        } while ((fn & 1) === 0 && fn !== 0);
+          fn = Math.floor(fn / 2);
+          sn = Math.floor(sn / 2);
+        } while (fn % 2 === 0 && fn !== 0);
       }
     } else {
       r = nodeHash(r, p);
     }
-    fn >>>= 1;
-    sn >>>= 1;
+    fn = Math.floor(fn / 2);
+    sn = Math.floor(sn / 2);
   }
   return sn === 0 && equal(r, root);
 }
 
 function isPowerOfTwo(x: number): boolean {
-  return x > 0 && (x & (x - 1)) === 0;
+  if (x <= 0) return false;
+  const b = BigInt(x);
+  return (b & (b - 1n)) === 0n;
 }
 
 /** SUBPROOF helper (RFC 6962 §2.1.2). */
@@ -88,7 +91,7 @@ export function consistencyProof(m: number, entries: Uint8Array[]): Uint8Array[]
 
 /**
  * Verify a consistency proof (RFC 9162 §2.1.4.2).
- * Sizes are bounded to < 2^32 (uses 32-bit unsigned arithmetic).
+ * Sizes up to Number.MAX_SAFE_INTEGER (2^53 − 1) are supported.
  */
 export function verifyConsistency(
   path: Uint8Array[],
@@ -97,7 +100,7 @@ export function verifyConsistency(
   firstRoot: Uint8Array,
   secondRoot: Uint8Array,
 ): boolean {
-  if (!Number.isInteger(first) || !Number.isInteger(second) || first < 0 || second < 0 || first > second) return false;
+  if (!Number.isSafeInteger(first) || !Number.isSafeInteger(second) || first < 0 || first > second) return false;
   if (first === 0) return path.length === 0;
   if (first === second) return path.length === 0 && equal(firstRoot, secondRoot);
 
@@ -106,29 +109,29 @@ export function verifyConsistency(
 
   let fn = first - 1;
   let sn = second - 1;
-  while ((fn & 1) === 1) {
-    fn >>>= 1;
-    sn >>>= 1;
+  while (fn % 2 === 1) {
+    fn = Math.floor(fn / 2);
+    sn = Math.floor(sn / 2);
   }
   let fr = work[0] as Uint8Array;
   let sr = work[0] as Uint8Array;
   for (let i = 1; i < work.length; i++) {
     const c = work[i] as Uint8Array;
     if (sn === 0) return false;
-    if ((fn & 1) === 1 || fn === sn) {
+    if (fn % 2 === 1 || fn === sn) {
       fr = nodeHash(c, fr);
       sr = nodeHash(c, sr);
-      if ((fn & 1) === 0) {
+      if (fn % 2 === 0) {
         do {
-          fn >>>= 1;
-          sn >>>= 1;
-        } while ((fn & 1) === 0 && fn !== 0);
+          fn = Math.floor(fn / 2);
+          sn = Math.floor(sn / 2);
+        } while (fn % 2 === 0 && fn !== 0);
       }
     } else {
       sr = nodeHash(sr, c);
     }
-    fn >>>= 1;
-    sn >>>= 1;
+    fn = Math.floor(fn / 2);
+    sn = Math.floor(sn / 2);
   }
   return sn === 0 && equal(fr, firstRoot) && equal(sr, secondRoot);
 }

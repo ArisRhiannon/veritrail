@@ -112,3 +112,19 @@ describe("AC1.6/AC1.7 consistency proofs", () => {
     expect(verifyConsistency(proof, m, n, rootM, badN)).toBe(false);
   });
 });
+
+describe("consistency verifier edge branches", () => {
+  const es = entries(7);
+  const root7 = refRoot(es);
+  test("first=0: empty tree is consistent with any tree (empty proof only)", () => {
+    expect(verifyConsistency([], 0, 7, emptyRoot(), root7)).toBe(true);
+    expect(verifyConsistency([], 0, 0, emptyRoot(), emptyRoot())).toBe(true);
+    expect(verifyConsistency([root7], 0, 7, emptyRoot(), root7)).toBe(false); // non-empty proof
+  });
+  test("first===second: requires empty proof and equal roots", () => {
+    expect(verifyConsistency([], 7, 7, root7, root7)).toBe(true);
+    const bad = Uint8Array.from(root7); bad[0]! ^= 1;
+    expect(verifyConsistency([], 7, 7, root7, bad)).toBe(false);
+    expect(verifyConsistency([root7], 7, 7, root7, root7)).toBe(false); // non-empty proof
+  });
+});

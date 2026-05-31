@@ -68,6 +68,44 @@ describe("CLI end-to-end (AC4.x)", () => {
     const e = arr[1] as string;
     arr[1] = (e[0] === "0" ? "1" : "0") + e.slice(1);
     writeFileSync(store, JSON.stringify(arr));
-    expect(run("audit", store, sf, pub).code).not.toBe(0);
+    expect(run("audit", store, sf, pub).code).toBe(1); // tamper detected = verification FAIL
+  });
+});
+
+describe("CLI robustness on malformed/untrusted input", () => {
+  test("verify on malformed JSON prints FAIL and exits 1 (no crash)", () => {
+    const bad = join(tmp, "bad-bundle.json");
+    writeFileSync(bad, "this is not json");
+    const r = run("verify", bad);
+    expect(r.code).toBe(1);
+    expect(r.out).toContain("FAIL");
+    expect(r.out).not.toContain("at "); // no stack trace
+  });
+
+  test("verify on an unknown bundle type exits 1", () => {
+    const bad = join(tmp, "unknown.json");
+    writeFileSync(bad, JSON.stringify({ type: "bogus" }));
+    expect(run("verify", bad).code).toBe(1);
+  });
+
+  test("verify on a missing file exits 2 with a clean error", () => {
+    const r = run("verify", join(tmp, "does-not-exist.json"));
+    expect(r.code).toBe(2);
+    expect(r.out).toContain("error:");
+    expect(r.out).not.toContain("at ");
+  });
+
+  test("audit on a garbage signed checkpoint exits cleanly (no stack trace)", () => {
+    const garbage = join(tmp, "garbage-sc.json");
+    writeFileSync(garbage, "{not valid");
+    const r = run("audit", store, garbage, pub);
+    expect(r.code).not.toBe(0);
+    expect(r.out).not.toContain("at ");
+  });
+
+  test("usage / range errors exit 2 (distinct from verification FAIL=1)", () => {
+    expect(run("append").code).toBe(2);              // missing args
+    expect(run("prove", store, "9999").code).toBe(2); // index out of range
+    expect(run("frobnicate").code).toBe(2);           // unknown command
   });
 });

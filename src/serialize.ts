@@ -19,9 +19,14 @@ export interface ConsistencyBundle {
   path: Uint8Array[];
 }
 
+function hexStr(x: unknown): Uint8Array {
+  if (typeof x !== "string") throw new TypeError("expected hex string");
+  return fromHex(x);
+}
+
 function hexArray(a: unknown): Uint8Array[] {
   if (!Array.isArray(a)) throw new Error("expected array");
-  return a.map((x) => fromHex(String(x)));
+  return a.map(hexStr);
 }
 
 export function inclusionToJSON(b: InclusionBundle): string {
@@ -41,22 +46,47 @@ export function consistencyToJSON(b: ConsistencyBundle): string {
 /** Parse a proof bundle and verify it self-consistently. Returns the verdict. */
 function uint(x: unknown): number {
   const v = Number(x);
-  return Number.isInteger(v) && v >= 0 ? v : NaN;
+  return Number.isSafeInteger(v) && v >= 0 ? v : NaN;
 }
 
+/**
+ * Verify a serialized proof bundle. This is the untrusted-input trust boundary:
+ * it is TOTAL — any malformed input (bad JSON, missing/typed-wrong fields,
+ * invalid hex, unknown type) yields `false` rather than throwing.
+ */
 export function verifyBundleJSON(json: string): boolean {
-  const o = JSON.parse(json) as Record<string, unknown>;
-  if (o.type === "inclusion") {
-    const index = uint(o.index), treeSize = uint(o.treeSize);
-    if (Number.isNaN(index) || Number.isNaN(treeSize)) return false;
-    return verifyInclusion(hexArray(o.path), index, treeSize, fromHex(String(o.leaf)), fromHex(String(o.root)));
+  let o: Record<string, unknown>;
+  try {
+    o = JSON.parse(json) as Record<string, unknown>;
+  } catch {
+    return false;
   }
-  if (o.type === "consistency") {
-    const first = uint(o.first), second = uint(o.second);
-    if (Number.isNaN(first) || Number.isNaN(second)) return false;
-    return verifyConsistency(hexArray(o.path), first, second, fromHex(String(o.firstRoot)), fromHex(String(o.secondRoot)));
+  try {
+    if (o?.type === "inclusion") {
+      const index = uint(o.index), treeSize = uint(o.treeSize);
+      if (Number.isNaN(index) || Number.isNaN(treeSize)) return false;
+      return verifyInclusion(hexArray(o.path), index, treeSize, hexStr(o.leaf), hexStr(o.root));
+    }
+    if (o?.type === "consistency") {
+      const first = uint(o.first), second = uint(o.second);
+      if (Number.isNaN(first) || Number.isNaN(second)) return false;
+      return verifyConsistency(hexArray(o.path), first, second, hexStr(o.firstRoot), hexStr(o.secondRoot));
+    }
+    return false; // unknown or missing bundle type
+  } catch {
+    return false; // invalid hex, wrong field types, etc.
   }
-  throw new Error(`unknown bundle type: ${String(o.type)}`);
+}
+
+function reqUint(x: unknown, field: string): number {
+  const v = Number(x);
+  if (!Number.isSafeInteger(v) || v < 0) throw new Error(`invalid checkpoint field: ${field}`);
+  return v;
+}
+function reqFinite(x: unknown, field: string): number {
+  const v = Number(x);
+  if (!Number.isFinite(v)) throw new Error(`invalid checkpoint field: ${field}`);
+  return v;
 }
 
 export function checkpointToJSON(c: Checkpoint): string {
@@ -64,7 +94,7 @@ export function checkpointToJSON(c: Checkpoint): string {
 }
 export function checkpointFromJSON(s: string): Checkpoint {
   const o = JSON.parse(s) as Record<string, unknown>;
-  return { size: Number(o.size), rootHash: fromHex(String(o.rootHash)), timestamp: Number(o.timestamp) };
+  return { size: reqUint(o.size, "size"), rootHash: hexStr(o.rootHash), timestamp: reqFinite(o.timestamp, "timestamp") };
 }
 
 export function signedCheckpointToJSON(sc: { checkpoint: Checkpoint; signature: Uint8Array }): string {
@@ -74,9 +104,11 @@ export function signedCheckpointToJSON(sc: { checkpoint: Checkpoint; signature: 
   });
 }
 export function signedCheckpointFromJSON(s: string): { checkpoint: Checkpoint; signature: Uint8Array } {
-  const o = JSON.parse(s) as { checkpoint: Record<string, unknown>; signature: unknown };
+  const o = JSON.parse(s) as { checkpoint?: Record<string, unknown>; signature: unknown };
+  const c = o.checkpoint;
+  if (typeof c !== "object" || c === null) throw new Error("invalid signed checkpoint: missing checkpoint");
   return {
-    checkpoint: { size: Number(o.checkpoint.size), rootHash: fromHex(String(o.checkpoint.rootHash)), timestamp: Number(o.checkpoint.timestamp) },
-    signature: fromHex(String(o.signature)),
+    checkpoint: { size: reqUint(c.size, "size"), rootHash: hexStr(c.rootHash), timestamp: reqFinite(c.timestamp, "timestamp") },
+    signature: hexStr(o.signature),
   };
 }
