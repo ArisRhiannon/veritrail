@@ -6,7 +6,7 @@ Role: CEO. Author: Aris Rhiannon. Status: accepted.
 `veritrail` — tamper-evident, verifiable append-only logs and maps for TypeScript.
 Zero dependencies, RFC 6962 / RFC 9162 Merkle trees, inclusion **and** consistency
 proofs, Ed25519-signed checkpoints, and a sparse-Merkle verifiable map. Runs anywhere
-Node or Bun runs. No server, no network, no AI.
+Node or Bun runs. No server, no network.
 
 ## Problem
 Teams that need to *prove* a log was only appended to (never secretly edited or
@@ -29,7 +29,7 @@ criteria backed by passing automated tests, and # of RFC test vectors reproduced
 2. **Zero runtime deps.** Only the platform `crypto` module.
 3. **Deterministic & verifiable.** Every claim has a pass/fail test; property tests for
    universal invariants; published test vectors for compliance.
-4. **No AI, no network, no I/O coupling.** Storage is a tiny injectable interface.
+4. **No network, no I/O coupling.** Storage is a tiny injectable interface.
 5. **Minimal, dense, honest code.** No speculative abstractions; no dead code.
 6. **Safe crypto.** Platform primitives only; verification does no secret-dependent work.
 
