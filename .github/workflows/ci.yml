@@ -5,8 +5,13 @@ on:
   pull_request:
     branches: [main]
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  test:
+    name: test (bun, ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
@@ -17,3 +22,36 @@ jobs:
         run: bun run typecheck
       - name: Test
         run: bun test
+
+  node-compat:
+    name: node-compat (build + import, node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [20, 22]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - run: bun install --frozen-lockfile || bun install
+      - name: Build dist (ESM + types)
+        run: bun run build
+      - name: Import built package under plain Node
+        run: |
+          node --input-type=module -e "
+            import { Log, verifyInclusion, utf8 } from './dist/index.js';
+            const l = new Log(); l.append(utf8('a')); l.append(utf8('b'));
+            const ok = verifyInclusion(l.inclusionProof(0), 0, l.size, l.leaf(0), l.root());
+            if (!ok) { console.error('inclusion failed'); process.exit(1); }
+            console.log('node import OK');
+          "
+      - name: Exercise built CLI under plain Node
+        run: |
+          node dist/cli.js append "$RUNNER_TEMP/log.json" hello
+          node dist/cli.js prove "$RUNNER_TEMP/log.json" 0 > "$RUNNER_TEMP/p.json"
+          node dist/cli.js verify "$RUNNER_TEMP/p.json"
