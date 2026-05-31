@@ -1,4 +1,4 @@
-import { sha256, leafHash, nodeHash, equal, utf8 } from "./hash";
+import { sha256, leafHash, nodeHash, equal, utf8 } from "./hash.js";
 
 /**
  * Sparse Merkle Tree over a 256-bit key space (depth 256).

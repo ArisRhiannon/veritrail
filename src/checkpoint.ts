@@ -1,5 +1,5 @@
 import { generateKeyPairSync, sign, verify, createPublicKey, createPrivateKey, type KeyObject } from "node:crypto";
-import { toHex, utf8 } from "./hash";
+import { toHex, utf8 } from "./hash.js";
 
 /** A signed-tree-head: a commitment to the log state at a point in time. */
 export interface Checkpoint {

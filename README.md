@@ -9,11 +9,16 @@ non-inclusion proofs). Runs anywhere Node or Bun runs. No server, no network.
 
 ## Why
 
-The JS/TS ecosystem has generic Merkle-tree libraries, but no modern, dependency-light,
-spec-faithful primitive for building your own *transparency logs* / tamper-evident audit
+The JS/TS ecosystem has generic Merkle-tree libraries, but few modern, dependency-light,
+spec-faithful primitives for building your own *transparency logs* / tamper-evident audit
 trails with both inclusion and consistency proofs. Robust implementations live in Rust
 (`ct-merkle`) or in server-scale infrastructure (Trillian). `veritrail` fills that gap as
-a small library you can read in an afternoon and trust in production.
+a small, auditable library: its proofs are byte-for-byte interoperable with the RFC 6962
+reference implementation (see the cross-implementation vectors in `test/`), and the whole
+core fits in a few hundred lines you can read in an afternoon.
+
+It targets small-to-moderate logs (in-memory or single-file). It is **not** a replacement
+for Trillian/CT at billions of entries — see [Performance & scale](#performance--scale).
 
 Use it for: supply-chain / release transparency, compliance audit trails (provably
 append-only), verifiable action logs for agents/automation, secure timestamping, and
@@ -22,10 +27,12 @@ key-transparency-style verifiable maps.
 ## Install
 
 ```sh
-bun add veritrail     # or: npm i veritrail   (runs on Node >= 20 via a TS loader / build)
+npm i veritrail      # or: bun add veritrail / pnpm add veritrail / yarn add veritrail
 ```
 
-Or use from source: `git clone … && bun install && bun test`.
+Ships compiled ESM + type declarations (`dist/`), so it imports under plain Node ≥ 20 (no
+loader needed) and Bun. The `veritrail` CLI runs on Node. From source: `git clone … &&
+bun install && bun run check`.
 
 ## Data model
 
@@ -106,6 +113,28 @@ signed checkpoint binds a specific `(size, root)` to a key holder. It does **not
 confidentiality (entries are not encrypted), availability, or protection against an
 attacker who controls the verifier's copy of the trusted root/public key. Crypto uses the
 platform `node:crypto` (SHA-256, Ed25519); verification performs no secret-dependent work.
+
+## Performance & scale
+
+Honest complexity (the core favors auditability over asymptotics):
+
+- `merkleRoot` / `inclusionProof` / `consistencyProof` are **recomputed from the full
+  entry set** — O(n) hashes per call (proof generation does not yet use cached subtrees).
+- `FileStore.append` rewrites the whole file — O(n) I/O per append.
+- `SparseMerkleTree` recomputes over populated nodes — O(k·256) for k entries.
+- Verification (`verifyInclusion` / `verifyConsistency`) is O(log n) and supports tree
+  sizes up to `Number.MAX_SAFE_INTEGER` (2⁵³−1).
+
+This is comfortable for thousands to low-millions of entries. For billion-entry,
+high-throughput logs use Trillian / a tiled log; incremental hashing and cached subtrees
+are on the roadmap.
+
+**Concurrency:** `FileStore` serializes appends across processes with an exclusive lock
+file (stale-lock recovery included) and writes atomically (`temp → fsync → rename`), so a
+crash or a concurrent writer can neither corrupt the store nor lose an entry. The lock is
+advisory with a 10 s stale timeout (a crashed writer's lock is reclaimed); it is **not**
+intended for high-contention or suspendable workloads, and it is a single-machine store,
+not a distributed one.
 
 ## API summary
 

@@ -1,4 +1,4 @@
-import { emptyRoot, leafHash, nodeHash, equal } from "./hash";
+import { emptyRoot, leafHash, nodeHash, equal } from "./hash.js";
 
 /** Largest power of two strictly less than n (n >= 2). Uses multiplication to
  *  stay correct beyond 2^31 (a signed `<<` would overflow). */

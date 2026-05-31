@@ -1,18 +1,18 @@
-#!/usr/bin/env bun
+#!/usr/bin/env node
 import { readFileSync, writeFileSync } from "node:fs";
-import { FileStore } from "./store";
-import { Log } from "./log";
-import { merkleRoot, consistencyProof } from "./merkle";
-import { toHex, utf8, equal } from "./hash";
+import { FileStore } from "./store.js";
+import { Log } from "./log.js";
+import { merkleRoot, consistencyProof } from "./merkle.js";
+import { toHex, utf8, equal } from "./hash.js";
 import {
   inclusionToJSON, consistencyToJSON, verifyBundleJSON,
   signedCheckpointToJSON, signedCheckpointFromJSON,
   type InclusionBundle, type ConsistencyBundle,
-} from "./serialize";
+} from "./serialize.js";
 import {
   generateKeyPair, exportPublicKeyPem, exportPrivateKeyPem,
   importPrivateKeyPem, importPublicKeyPem, verifyCheckpoint,
-} from "./checkpoint";
+} from "./checkpoint.js";
 
 function die(msg: string, code = 2): never {
   console.error(msg);

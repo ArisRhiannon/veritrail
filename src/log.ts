@@ -1,7 +1,7 @@
-import { leafHash } from "./hash";
-import { merkleRoot, inclusionPath, consistencyProof } from "./merkle";
-import { MemoryStore, type Store } from "./store";
-import { type Checkpoint, signCheckpoint } from "./checkpoint";
+import { leafHash } from "./hash.js";
+import { merkleRoot, inclusionPath, consistencyProof } from "./merkle.js";
+import { MemoryStore, type Store } from "./store.js";
+import { type Checkpoint, signCheckpoint } from "./checkpoint.js";
 import type { KeyObject } from "node:crypto";
 
 /** An append-only, tamper-evident log over a pluggable Store. */

@@ -1,6 +1,6 @@
-import { toHex, fromHex } from "./hash";
-import { verifyInclusion, verifyConsistency } from "./merkle";
-import type { Checkpoint } from "./checkpoint";
+import { toHex, fromHex } from "./hash.js";
+import { verifyInclusion, verifyConsistency } from "./merkle.js";
+import type { Checkpoint } from "./checkpoint.js";
 
 export interface InclusionBundle {
   type: "inclusion";
