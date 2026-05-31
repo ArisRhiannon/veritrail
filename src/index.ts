@@ -4,3 +4,4 @@ export * from "./store";
 export * from "./checkpoint";
 export * from "./log";
 export * from "./smt";
+export * from "./serialize";
