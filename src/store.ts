@@ -1,4 +1,5 @@
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, openSync, writeSync, fsyncSync, closeSync, renameSync } from "node:fs";
+import { dirname } from "node:path";
 import { toHex, fromHex } from "./hash";
 
 /** Append-only entry storage. Implementations must preserve insertion order. */
@@ -35,7 +36,8 @@ export class MemoryStore implements Store {
   }
 }
 
-/** File-backed store. Persists entries as a JSON array of hex strings. */
+/** File-backed store. Persists entries as a JSON array of hex strings.
+ *  Note: each append rewrites the whole file (O(n)); fine at library scale. */
 export class FileStore implements Store {
   private entries: Uint8Array[] = [];
   constructor(private readonly path: string) {
@@ -45,8 +47,32 @@ export class FileStore implements Store {
       this.entries = arr.map((h) => fromHex(String(h)));
     }
   }
+  /** Atomic + durable: write a temp file, fsync it, then rename over the target.
+   *  A crash mid-write can never leave a partially written or truncated store.
+   *  The directory is then fsync'd so the rename itself survives power loss
+   *  (best-effort: silently skipped on platforms without directory fsync). */
   private persist(): void {
-    writeFileSync(this.path, JSON.stringify(this.entries.map(toHex)));
+    const tmp = `${this.path}.tmp`;
+    const data = Buffer.from(JSON.stringify(this.entries.map(toHex)));
+    const fd = openSync(tmp, "w");
+    try {
+      writeSync(fd, data);
+      fsyncSync(fd);
+    } finally {
+      closeSync(fd);
+    }
+    renameSync(tmp, this.path);
+    try {
+      const dir = openSync(dirname(this.path) || ".", "r");
+      try {
+        fsyncSync(dir);
+      } finally {
+        closeSync(dir);
+      }
+    } catch {
+      // directory fsync is unsupported on some platforms (e.g. Windows); the
+      // temp+fsync+rename above already guarantees the store is never corrupt.
+    }
   }
   size(): number {
     return this.entries.length;

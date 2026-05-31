@@ -120,15 +120,15 @@ platform `node:crypto` (SHA-256, Ed25519); verification performs no secret-depen
 
 ## Status
 
-v0.1 implements the full v1 scope (see `docs/PLAN.md`): Merkle core, append-only log with
+v0.2 implements the full v1 scope (see `docs/PLAN.md`): Merkle core, append-only log with
 signed checkpoints, verifiable map, CLI, RFC known-answer + 500-trial property tests, CI.
-Decisions are recorded in `docs/adr/`. Roadmap: networked witness/gossip, tiled logs,
-inclusion-proof batching.
+Proof verifiers are total (never throw on untrusted input) and support tree sizes up to
+`Number.MAX_SAFE_INTEGER`; the file store writes atomically and durably. Decisions are
+recorded in `docs/adr/`. Roadmap: networked witness/gossip, tiled logs, inclusion-proof
+batching.
 
 ## License
 
-Source-available — **not** OSI open source. Free under the GNU **AGPL-3.0** for
-individuals, non-profits, and organizations below **US$1M annual revenue and 50
-employees**; larger organizations require a commercial license. See [LICENSE](LICENSE).
-
-© 2026 Aris Rhiannon
+[MIT](LICENSE) © 2026 Aris Rhiannon. Permissive, OSI-approved open source — free to
+use, modify, and embed (including in commercial and networked services) with no
+revenue or headcount restrictions.

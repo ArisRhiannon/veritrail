@@ -71,3 +71,19 @@ describe("AC3.5 tamper rejection", () => {
     expect(verifyMapInclusion(k, utf8("d7"), proof.slice(1), root)).toBe(false);
   });
 });
+
+describe("SMT delete lifecycle", () => {
+  test("set→inclusion, delete→non-inclusion, root returns to prior state", () => {
+    const t = new SparseMerkleTree();
+    for (let i = 0; i < 12; i++) t.set(smtKey(`base${i}`), utf8(`v${i}`));
+    const before = t.root();
+    const k = smtKey("transient");
+    t.set(k, utf8("temp"));
+    expect(t.has(k)).toBe(true);
+    expect(verifyMapInclusion(k, utf8("temp"), t.proof(k), t.root())).toBe(true);
+    t.delete(k);
+    expect(t.has(k)).toBe(false);
+    expect(verifyMapNonInclusion(k, t.proof(k), t.root())).toBe(true);
+    expect(equal(t.root(), before)).toBe(true); // removing the sole difference restores the root
+  });
+});

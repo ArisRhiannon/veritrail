@@ -14,10 +14,16 @@ import {
   importPrivateKeyPem, importPublicKeyPem, verifyCheckpoint,
 } from "./checkpoint";
 
-function die(msg: string, code = 1): never {
+function die(msg: string, code = 2): never {
   console.error(msg);
   process.exit(code);
 }
+
+// Convert any unexpected error (missing/unreadable file, malformed JSON, bad
+// hex, bad PEM, …) into a clean message with exit code 2. This keeps the
+// pipeline contract crisp: 0 = valid, 1 = verification FAIL, 2 = usage/format
+// error — and never leaks a stack trace on untrusted input.
+process.on("uncaughtException", (e) => die(`error: ${e instanceof Error ? e.message : String(e)}`, 2));
 
 const HELP = `veritrail — tamper-evident verifiable logs
 commands:
@@ -101,7 +107,7 @@ switch (cmd) {
     const l = open(f);
     const sc = signedCheckpointFromJSON(readFileSync(scFile, "utf8"));
     const pub = importPublicKeyPem(readFileSync(pubFile, "utf8"));
-    if (sc.checkpoint.size > l.size) die(`TAMPERED: checkpoint size ${sc.checkpoint.size} > log size ${l.size}`);
+    if (sc.checkpoint.size > l.size) die(`TAMPERED: checkpoint size ${sc.checkpoint.size} > log size ${l.size}`, 1);
     const recomputed = merkleRoot(l.entries().slice(0, sc.checkpoint.size));
     const rootOk = equal(recomputed, sc.checkpoint.rootHash);
     const sigOk = verifyCheckpoint(sc.checkpoint, sc.signature, pub);
@@ -109,7 +115,7 @@ switch (cmd) {
       console.log(`OK size=${sc.checkpoint.size} root=${toHex(sc.checkpoint.rootHash)}`);
       process.exit(0);
     }
-    die(`TAMPERED rootOk=${rootOk} sigOk=${sigOk}`);
+    die(`TAMPERED rootOk=${rootOk} sigOk=${sigOk}`, 1);
     break;
   }
   case "help": case "--help": case "-h": case undefined:
