@@ -14,7 +14,7 @@ crypto = platform `node:crypto` (SHA-256, Ed25519). Hash domain per RFC 6962:
 ## Phase 0 — Scaffold & tooling
 **Problem:** Need a reproducible, dependency-light TS project that builds, types, tests, CI.
 **Goal:** Green skeleton ready for TDD.
-**Scope:** package.json, tsconfig (strict), .gitignore, LICENSE (MIT, Aris Rhiannon),
+**Scope:** package.json, tsconfig (strict), .gitignore, LICENSE (AGPL-3.0 + commercial, Aris Rhiannon),
 README skeleton, src/ + test/ layout, GitHub Actions CI, community files.
 **Non-Goals:** any algorithm logic.
 **Acceptance Criteria:**

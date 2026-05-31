@@ -127,4 +127,8 @@ inclusion-proof batching.
 
 ## License
 
-MIT © Aris Rhiannon
+Source-available — **not** OSI open source. Free under the GNU **AGPL-3.0** for
+individuals, non-profits, and organizations below **US$1M annual revenue and 50
+employees**; larger organizations require a commercial license. See [LICENSE](LICENSE).
+
+© 2026 Aris Rhiannon

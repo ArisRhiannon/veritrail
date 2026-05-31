@@ -62,4 +62,4 @@ sparse Merkle verifiable map, serializable proofs, CLI, docs, tests, CI.
 
 ## Definition of done
 All SC1–SC8 met and independently validated (VALIDATION.md), QA findings addressed,
-pushed to GitHub under ArisRhiannon (MIT), CI green.
+pushed to GitHub under ArisRhiannon (AGPL-3.0 + commercial, source-available), CI green.
