@@ -39,13 +39,22 @@ export function consistencyToJSON(b: ConsistencyBundle): string {
 }
 
 /** Parse a proof bundle and verify it self-consistently. Returns the verdict. */
+function uint(x: unknown): number {
+  const v = Number(x);
+  return Number.isInteger(v) && v >= 0 ? v : NaN;
+}
+
 export function verifyBundleJSON(json: string): boolean {
   const o = JSON.parse(json) as Record<string, unknown>;
   if (o.type === "inclusion") {
-    return verifyInclusion(hexArray(o.path), Number(o.index), Number(o.treeSize), fromHex(String(o.leaf)), fromHex(String(o.root)));
+    const index = uint(o.index), treeSize = uint(o.treeSize);
+    if (Number.isNaN(index) || Number.isNaN(treeSize)) return false;
+    return verifyInclusion(hexArray(o.path), index, treeSize, fromHex(String(o.leaf)), fromHex(String(o.root)));
   }
   if (o.type === "consistency") {
-    return verifyConsistency(hexArray(o.path), Number(o.first), Number(o.second), fromHex(String(o.firstRoot)), fromHex(String(o.secondRoot)));
+    const first = uint(o.first), second = uint(o.second);
+    if (Number.isNaN(first) || Number.isNaN(second)) return false;
+    return verifyConsistency(hexArray(o.path), first, second, fromHex(String(o.firstRoot)), fromHex(String(o.secondRoot)));
   }
   throw new Error(`unknown bundle type: ${String(o.type)}`);
 }

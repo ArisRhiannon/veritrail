@@ -33,6 +33,7 @@ export function inclusionPath(m: number, entries: Uint8Array[]): Uint8Array[] {
 /**
  * Verify an inclusion proof (RFC 9162 §2.1.3.2). `leaf` is the leaf hash.
  * Reconstructs the root from `leaf` + `path` and compares to `root`.
+ * Note: sizes are bounded to < 2^32 (uses 32-bit unsigned index arithmetic).
  */
 export function verifyInclusion(
   path: Uint8Array[],
@@ -41,7 +42,7 @@ export function verifyInclusion(
   leaf: Uint8Array,
   root: Uint8Array,
 ): boolean {
-  if (index < 0 || treeSize < 0 || index >= treeSize) return false;
+  if (!Number.isInteger(index) || !Number.isInteger(treeSize) || index < 0 || treeSize < 0 || index >= treeSize) return false;
   let fn = index;
   let sn = treeSize - 1;
   let r = leaf;
@@ -51,15 +52,15 @@ export function verifyInclusion(
       r = nodeHash(p, r);
       if ((fn & 1) === 0) {
         do {
-          fn >>= 1;
-          sn >>= 1;
+          fn >>>= 1;
+          sn >>>= 1;
         } while ((fn & 1) === 0 && fn !== 0);
       }
     } else {
       r = nodeHash(r, p);
     }
-    fn >>= 1;
-    sn >>= 1;
+    fn >>>= 1;
+    sn >>>= 1;
   }
   return sn === 0 && equal(r, root);
 }
@@ -85,7 +86,10 @@ export function consistencyProof(m: number, entries: Uint8Array[]): Uint8Array[]
   return subproof(m, entries, true);
 }
 
-/** Verify a consistency proof (RFC 9162 §2.1.4.2). */
+/**
+ * Verify a consistency proof (RFC 9162 §2.1.4.2).
+ * Sizes are bounded to < 2^32 (uses 32-bit unsigned arithmetic).
+ */
 export function verifyConsistency(
   path: Uint8Array[],
   first: number,
@@ -93,7 +97,7 @@ export function verifyConsistency(
   firstRoot: Uint8Array,
   secondRoot: Uint8Array,
 ): boolean {
-  if (first < 0 || second < 0 || first > second) return false;
+  if (!Number.isInteger(first) || !Number.isInteger(second) || first < 0 || second < 0 || first > second) return false;
   if (first === 0) return path.length === 0;
   if (first === second) return path.length === 0 && equal(firstRoot, secondRoot);
 
@@ -103,8 +107,8 @@ export function verifyConsistency(
   let fn = first - 1;
   let sn = second - 1;
   while ((fn & 1) === 1) {
-    fn >>= 1;
-    sn >>= 1;
+    fn >>>= 1;
+    sn >>>= 1;
   }
   let fr = work[0] as Uint8Array;
   let sr = work[0] as Uint8Array;
@@ -116,15 +120,15 @@ export function verifyConsistency(
       sr = nodeHash(c, sr);
       if ((fn & 1) === 0) {
         do {
-          fn >>= 1;
-          sn >>= 1;
+          fn >>>= 1;
+          sn >>>= 1;
         } while ((fn & 1) === 0 && fn !== 0);
       }
     } else {
       sr = nodeHash(sr, c);
     }
-    fn >>= 1;
-    sn >>= 1;
+    fn >>>= 1;
+    sn >>>= 1;
   }
   return sn === 0 && equal(fr, firstRoot) && equal(sr, secondRoot);
 }

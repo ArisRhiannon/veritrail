@@ -60,6 +60,13 @@ describe("AC5.2 property: consistency (>=500 trials)", () => {
       if (m < n) {
         const bad = Uint8Array.from(rootN); bad[(r() * 32) | 0]! ^= 1 + ((r() * 255) | 0);
         expect(verifyConsistency(proof, m, n, rootM, bad)).toBe(false);
+        const badFirst = Uint8Array.from(rootM); badFirst[(r() * 32) | 0]! ^= 1 + ((r() * 255) | 0);
+        expect(verifyConsistency(proof, m, n, badFirst, rootN)).toBe(false);
+        if (proof.length > 0) {
+          const bp = proof.map((p) => Uint8Array.from(p));
+          bp[(r() * proof.length) | 0]![0]! ^= 1;
+          expect(verifyConsistency(bp, m, n, rootM, rootN)).toBe(false);
+        }
       }
       ok++;
     }

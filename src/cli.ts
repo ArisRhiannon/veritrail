@@ -3,7 +3,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { FileStore } from "./store";
 import { Log } from "./log";
 import { merkleRoot, consistencyProof } from "./merkle";
-import { toHex, utf8 } from "./hash";
+import { toHex, utf8, equal } from "./hash";
 import {
   inclusionToJSON, consistencyToJSON, verifyBundleJSON,
   signedCheckpointToJSON, signedCheckpointFromJSON,
@@ -103,7 +103,7 @@ switch (cmd) {
     const pub = importPublicKeyPem(readFileSync(pubFile, "utf8"));
     if (sc.checkpoint.size > l.size) die(`TAMPERED: checkpoint size ${sc.checkpoint.size} > log size ${l.size}`);
     const recomputed = merkleRoot(l.entries().slice(0, sc.checkpoint.size));
-    const rootOk = toHex(recomputed) === toHex(sc.checkpoint.rootHash);
+    const rootOk = equal(recomputed, sc.checkpoint.rootHash);
     const sigOk = verifyCheckpoint(sc.checkpoint, sc.signature, pub);
     if (rootOk && sigOk) {
       console.log(`OK size=${sc.checkpoint.size} root=${toHex(sc.checkpoint.rootHash)}`);
