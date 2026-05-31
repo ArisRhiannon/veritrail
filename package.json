@@ -1,0 +1,30 @@
+{
+  "name": "veritrail",
+  "version": "0.1.0",
+  "description": "Tamper-evident, verifiable append-only logs and maps for TypeScript. RFC 6962 Merkle trees with inclusion & consistency proofs, Ed25519-signed checkpoints, and a sparse Merkle verifiable map. Zero dependencies.",
+  "type": "module",
+  "license": "MIT",
+  "author": "Aris Rhiannon",
+  "homepage": "https://github.com/ArisRhiannon/veritrail#readme",
+  "repository": { "type": "git", "url": "git+https://github.com/ArisRhiannon/veritrail.git" },
+  "bugs": { "url": "https://github.com/ArisRhiannon/veritrail/issues" },
+  "keywords": ["merkle-tree", "transparency-log", "rfc6962", "rfc9162", "tamper-evident", "inclusion-proof", "consistency-proof", "sparse-merkle-tree", "audit-log", "verifiable", "zero-dependency", "typescript"],
+  "main": "src/index.ts",
+  "module": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": { ".": "./src/index.ts" },
+  "bin": { "veritrail": "src/cli.ts" },
+  "files": ["src", "docs", "LICENSE", "README.md"],
+  "scripts": {
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "check": "bun run typecheck && bun test"
+  },
+  "engines": { "bun": ">=1.1.0", "node": ">=20" },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/bun": "^1.1.0",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  }
+}
