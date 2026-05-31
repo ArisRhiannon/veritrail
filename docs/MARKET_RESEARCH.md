@@ -7,12 +7,12 @@ Role: Market Researcher. Author: Aris Rhiannon. Status: complete → feeds VISIO
 Applied `market-sizing-analysis` (TAM/SAM/SOM, adapted from $ to OSS adoption potential),
 `competitive-landscape` (prior-art survey + differentiation), and RICE scoring from
 `product-manager-toolkit`. Goal: find an **underserved, high-complexity, self-contained
-(non-SaaS, no-AI)** software gap that is buildable **and fully verifiable** in this
+(non-SaaS, dependency-free)** software gap that is buildable **and fully verifiable** in this
 environment (Bun 1.3.11 / Node v24; Rust/Go not confirmed installed).
 
 Selection constraints (hard):
-- Self-contained: no server, no network, no external service, no AI at runtime.
-- High complexity but **spec-anchored** so correctness is objective (avoids "AI-slop").
+- Self-contained: no server, no network, no external service.
+- High complexity but **spec-anchored** so correctness is objective (avoids unverifiable correctness claims).
 - Deterministically testable here (unit + property + known test vectors).
 - Real, current demand.
 

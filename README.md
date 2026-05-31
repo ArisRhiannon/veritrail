@@ -5,7 +5,7 @@
 **Tamper-evident, verifiable append-only logs and maps for TypeScript.** Zero
 dependencies. RFC 6962 / RFC 9162 Merkle trees with **inclusion *and* consistency**
 proofs, Ed25519-signed checkpoints, and a sparse-Merkle **verifiable map** (inclusion +
-non-inclusion proofs). Runs anywhere Node or Bun runs. No server, no network, no AI.
+non-inclusion proofs). Runs anywhere Node or Bun runs. No server, no network.
 
 ## Why
 
